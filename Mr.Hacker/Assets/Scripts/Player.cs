@@ -22,7 +22,26 @@ public class Player : MonoBehaviour {
 		//Move the player.
 		walkPlayer();
 	}
+	void OnCollisionEnter(Collision col) {
+		if (col.gameObject.tag == "Laser") {
+			hurtPlayer(col.gameObject.GetComponent<Laser>().damage);
+		}
+			
+	}
 
+
+	public void hurtPlayer(int damage) {
+		health -= damage;
+
+		if (health <= 0) {
+			onPlayerDeath();
+		}
+	}
+
+	private void onPlayerDeath() {
+		BoardManager.boardManager.loadLevel();
+		print("crap");
+	}
 
 	/// <summary>
 	/// Moves the player to the location based on the input, and plays the correct animation.
