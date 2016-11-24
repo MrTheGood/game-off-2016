@@ -10,6 +10,7 @@ public class Player : MonoBehaviour {
 	private CharacterController characterController;
 	private Animator animator;
 	private Sprite startSprite;
+	private bool isHacking;
 
 
 
@@ -19,15 +20,22 @@ public class Player : MonoBehaviour {
 		startSprite = GetComponent<SpriteRenderer>().sprite;
 	}
 	void Update () {
-		//Move the player.
-		walkPlayer();
+		if (!isHacking) {
+			//Move the player.
+			walkPlayer();
+		}
 	}
-	void OnCollisionEnter(Collision col) {
+	void OnTriggerEnter(Collider col) {
 		if (col.gameObject.tag == "Laser") {
 			hurtPlayer(col.gameObject.GetComponent<Laser>().damage);
 		}
+		if (col.gameObject.tag == "RobotBack") {
+			col.transform.parent.gameObject.GetComponent<Robot>().hackRobot();
+			isHacking = true;
+		}
 			
 	}
+		
 
 
 	public void hurtPlayer(int damage) {

@@ -10,6 +10,10 @@ public class Robot : MonoBehaviour {
 	public bool hackable = true;				//If the robot is hackable or not
 	public Vector2[] path;						//The path the robot should use
 	public GameObject laser;
+	//Box Colliders for the back of the robot
+	public BoxCollider backColliderSide;
+	public BoxCollider backColliderUp;
+	public BoxCollider backColliderDown;
 
 	private int targetWaypoint;					//The next point of the path
 	private bool isHacked = false;				//If the robot is hacked
@@ -33,6 +37,52 @@ public class Robot : MonoBehaviour {
 			}
 			//Set the walk animation.
 			setWalkAnimation();
+		} else {
+			walkHackedRobot();
+		}
+	}
+
+
+	public void hackRobot() {
+		print("hack");
+		if (!hackable)
+			return;
+		
+		isHacked = true;
+		animator.SetBool("isHacked", true);
+	}
+
+	private void walkHackedRobot() {
+		//Calculate the input/walking speed
+		float x = Input.GetAxis("Horizontal") * speed * Time.deltaTime;
+		float y = Input.GetAxis("Vertical") * speed * Time.deltaTime;
+
+		//Reset the animator and rotation
+		transform.rotation = new Quaternion(0, 0, 0, 0);
+		animator.enabled = true;
+
+		//Move the robot
+		transform.Translate(x, y, 0);
+
+		//Test the direction and set the animation.
+		if (x > 0) {
+			//Right
+			animator.SetInteger("WalkState", 2);
+		} else if (x < 0) {
+			//Left
+			animator.SetInteger("WalkState", 2);
+			//Flip the robot horizontally 
+			transform.rotation = new Quaternion(0, 180, 0, 0);
+		} else if (y > 0) {
+			//Up
+			animator.SetInteger("WalkState", 1);
+		} else if (y < 0) {
+			//Down
+			animator.SetInteger("WalkState", 0);
+		} else {
+			//The robot isn't walking. Stop the animation and set a standing sprite.
+			animator.enabled = false;
+			GetComponent<SpriteRenderer>().sprite = startSprite;
 		}
 	}
 
@@ -135,20 +185,39 @@ public class Robot : MonoBehaviour {
 		if (targetLocation.x > transform.position.x) {
 			//Right
 			animator.SetInteger("WalkState", 2);
+			//Set the right back collider
+			backColliderSide.enabled = true;
+			backColliderUp.enabled = false;
+			backColliderDown.enabled = false;
 		} else if (targetLocation.x < transform.position.x) {
 			//Left
 			animator.SetInteger("WalkState", 2);
 			//Flip the robot horizontally 
 			transform.rotation = new Quaternion(0, 180, 0, 0);
+			//Set the right back collider
+			backColliderSide.enabled = true;
+			backColliderUp.enabled = false;
+			backColliderDown.enabled = false;
 		} else if (targetLocation.y > transform.position.y) {
 			//Up
 			animator.SetInteger("WalkState", 1);
+			//Set the right back collider
+			backColliderSide.enabled = false;
+			backColliderUp.enabled = false;
+			backColliderDown.enabled = true;
 		} else if (targetLocation.y < transform.position.y) {
 			//Down
 			animator.SetInteger("WalkState", 0);
+			//Set the right back collider
+			backColliderSide.enabled = false;
+			backColliderUp.enabled = true;
+			backColliderDown.enabled = false;
 		} else {
 			//The Robot isn't walking. Stop the animation and set a standing sprite.
 			animator.enabled = false;
+			backColliderSide.enabled = true;
+			backColliderUp.enabled = false;
+			backColliderDown.enabled = false;
 			GetComponent<SpriteRenderer>().sprite = startSprite;
 		}
 	}

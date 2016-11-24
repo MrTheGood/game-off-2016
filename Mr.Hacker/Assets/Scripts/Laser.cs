@@ -16,14 +16,14 @@ public class Laser : MonoBehaviour {
 	}
 
 	void OnTriggerEnter(Collider col) {
-		if (col.gameObject.tag == "Robot") 
+		if (col.gameObject.tag == "Robot" || col.gameObject.tag == "RobotBack") 
 			return;
 		
 		Destroy(gameObject);
 	}
 
 	void OnCollisionEnter(Collision col) {
-		if (col.gameObject.tag == "Robot") 
+		if (col.gameObject.tag == "Robot" || col.gameObject.tag == "RobotBack") 
 			return;
 		
 		Destroy(gameObject);
