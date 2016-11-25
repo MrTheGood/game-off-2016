@@ -28,6 +28,14 @@ public class Robot : MonoBehaviour {
 		startSprite = GetComponent<SpriteRenderer>().sprite;
 	}
 	void Update () {
+		if (health <= 0) {
+			if (isHacked) {
+				GameObject.FindGameObjectWithTag("Player").GetComponent<Player>().stopHacking(this);
+			} else {
+				Destroy(gameObject);
+			}
+		}
+
 		if (!isHacked) {
 			if (!isShooting) {
 				//Move the robot
@@ -38,19 +46,33 @@ public class Robot : MonoBehaviour {
 			//Set the walk animation.
 			setWalkAnimation();
 		} else {
-			walkHackedRobot();
+			if (!isShooting) {
+				walkHackedRobot();
+				if (Input.GetKeyDown(KeyCode.Space)) {
+					StartCoroutine(fireHackedLaser());
+				}
+			}
+		}
+	}
+	void OnTriggerEnter(Collider col) {
+		if (col.gameObject.tag == "Laser") {
+			if (col.gameObject.GetComponent<Laser>().parent == gameObject)
+				return;
+			
+			health -= col.gameObject.GetComponent<Laser>().damage;
 		}
 	}
 
 
-	public void hackRobot() {
-		print("hack");
+	public void setHacked(bool hacked) {
 		if (!hackable)
 			return;
-		
-		isHacked = true;
-		animator.SetBool("isHacked", true);
+
+		isShooting = false;
+		isHacked = hacked;
+		animator.SetBool("isHacked", hacked);
 	}
+
 
 	private void walkHackedRobot() {
 		//Calculate the input/walking speed
@@ -62,7 +84,7 @@ public class Robot : MonoBehaviour {
 		animator.enabled = true;
 
 		//Move the robot
-		transform.Translate(x, y, 0);
+		GetComponent<CharacterController>().Move(new Vector3(x, y, 0));
 
 		//Test the direction and set the animation.
 		if (x > 0) {
@@ -103,9 +125,49 @@ public class Robot : MonoBehaviour {
 	}
 
 
+	private IEnumerator fireHackedLaser() {
+		float x = Input.GetAxis("Horizontal") * speed * Time.deltaTime;
+		float y = Input.GetAxis("Vertical") * speed * Time.deltaTime;
+
+		//Start the animation
+		isShooting = true;
+		animator.SetTrigger("Fire");
+		yield return new WaitForSeconds(0.6f);
+
+		//Instantiate the laser
+		GameObject instance = (GameObject)Instantiate(laser, transform.position, new Quaternion());
+
+		//Send the laser to the correct direction
+		if (x < 0) {
+			instance.transform.position -= new Vector3(0.2f, 0.1f, 0);
+			instance.transform.rotation = new Quaternion(0, 0, 180, 0);
+		}
+		else if (y < 0) {
+			instance.transform.position -= new Vector3();
+			instance.transform.rotation = new Quaternion(0, 0, 90, -90);
+		}
+		else if (y > 0) {
+			instance.transform.position -= new Vector3();
+			instance.transform.rotation = new Quaternion(0, 0, 90, 90);
+		}
+		else  {
+			instance.transform.position -= new Vector3(0, 0.1f, 0);
+			instance.transform.rotation = new Quaternion();
+		}
+
+		//Set the laser damage
+		instance.GetComponent<Laser>().damage = damage;
+		instance.GetComponent<Laser>().parent = gameObject;
+
+		//Wait 0.6 seconds
+		yield return new WaitForSeconds(0.6f);
+		//Stop shooting
+		isShooting = false;
+	}
+
 
 	private IEnumerator fireLaser(Vector2 direction) {
-		//Star the animation
+		//Start the animation
 		isShooting = true;
 		animator.SetTrigger("Fire");
 		yield return new WaitForSeconds(0.6f);
@@ -136,9 +198,11 @@ public class Robot : MonoBehaviour {
 
 		//Set the laser damage
 		instance.GetComponent<Laser>().damage = damage;
+		instance.GetComponent<Laser>().parent = gameObject;
 
-		//
+		//Wait 1.2 seconds
 		yield return new WaitForSeconds(1.2f);
+		//Stop shooting
 		isShooting = false;
 	}
 
@@ -169,6 +233,11 @@ public class Robot : MonoBehaviour {
 		if (Physics.Raycast(transform.position, -getWalkingDirection(), out hit)) {
 			if (hit.collider.gameObject.tag == "Player") {
 				StartCoroutine(fireLaser(getWalkingDirection()));
+			}
+			if (hit.collider.gameObject.tag == "Robot") {
+				if (hit.collider.gameObject.GetComponent<Robot>().isHacked) {
+					StartCoroutine(fireLaser(getWalkingDirection()));
+				}
 			}
 		}
 	}

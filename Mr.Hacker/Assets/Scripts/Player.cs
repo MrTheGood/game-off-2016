@@ -30,12 +30,33 @@ public class Player : MonoBehaviour {
 			hurtPlayer(col.gameObject.GetComponent<Laser>().damage);
 		}
 		if (col.gameObject.tag == "RobotBack") {
-			col.transform.parent.gameObject.GetComponent<Robot>().hackRobot();
-			isHacking = true;
+			if (!isHacking) {
+				startHacking(col.transform.parent.gameObject.GetComponent<Robot>());
+			}
+		}
+		if (col.gameObject.tag == "Robot") {
+			onPlayerDeath();
 		}
 			
 	}
-		
+
+
+	public void startHacking(Robot hackedBot) {
+		hackedBot.setHacked(true);
+		isHacking = true;
+		animator.enabled = false;
+		GetComponent<SpriteRenderer>().sprite = startSprite;
+	}
+	public void stopHacking(Robot hackedBot) {
+		StartCoroutine(stopHackRoutine(hackedBot));
+	}
+	private IEnumerator stopHackRoutine(Robot hackedBot) {
+		StopCoroutine(stopHackRoutine(hackedBot));
+		Destroy(hackedBot.gameObject);
+		yield return new WaitForSeconds(1f);
+		isHacking = false;
+		animator.enabled = true;
+	}
 
 
 	public void hurtPlayer(int damage) {
