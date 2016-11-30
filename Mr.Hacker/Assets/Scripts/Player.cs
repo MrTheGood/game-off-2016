@@ -43,6 +43,7 @@ public class Player : MonoBehaviour {
 
 	public void startHacking(Robot hackedBot) {
 		hackedBot.setHacked(true);
+		BoardManager.score += hackedBot.points;
 		isHacking = true;
 		animator.enabled = false;
 		GetComponent<SpriteRenderer>().sprite = startSprite;
@@ -53,6 +54,7 @@ public class Player : MonoBehaviour {
 	private IEnumerator stopHackRoutine(Robot hackedBot) {
 		StopCoroutine(stopHackRoutine(hackedBot));
 		Destroy(hackedBot.gameObject);
+		BoardManager.score += hackedBot.points;
 		yield return new WaitForSeconds(1f);
 		isHacking = false;
 		animator.enabled = true;
@@ -62,7 +64,7 @@ public class Player : MonoBehaviour {
 	public void hurtPlayer(int damage) {
 		health -= damage;
 
-		if (health <= 0) {
+		if (health < 0) {
 			onPlayerDeath();
 		}
 	}

@@ -5,6 +5,7 @@ using System.Collections;
 // @Author: Grafisch Lyceum Rotterdam, Maarten de Goede
 public class Robot : MonoBehaviour {
 	public int health = 5;
+	public int points = 20;
 	public int damage = 1;
 	public float speed = 3;
 	public bool hackable = true;				//If the robot is hackable or not
@@ -33,6 +34,7 @@ public class Robot : MonoBehaviour {
 				GameObject.FindGameObjectWithTag("Player").GetComponent<Player>().stopHacking(this);
 			} else {
 				Destroy(gameObject);
+				BoardManager.score += points;
 			}
 		}
 
@@ -47,10 +49,10 @@ public class Robot : MonoBehaviour {
 			setWalkAnimation();
 		} else {
 			if (!isShooting) {
-				walkHackedRobot();
 				if (Input.GetKeyDown(KeyCode.Space)) {
 					StartCoroutine(fireHackedLaser());
 				}
+				walkHackedRobot();
 			}
 		}
 	}
@@ -101,7 +103,7 @@ public class Robot : MonoBehaviour {
 		} else if (y < 0) {
 			//Down
 			animator.SetInteger("WalkState", 0);
-		} else {
+		} else if (!isShooting) {
 			//The robot isn't walking. Stop the animation and set a standing sprite.
 			animator.enabled = false;
 			GetComponent<SpriteRenderer>().sprite = startSprite;
@@ -281,8 +283,13 @@ public class Robot : MonoBehaviour {
 			backColliderSide.enabled = false;
 			backColliderUp.enabled = true;
 			backColliderDown.enabled = false;
+		} else if (isShooting) {
+			//The Robot is shooting.
+			backColliderSide.enabled = true;
+			backColliderUp.enabled = false;
+			backColliderDown.enabled = false;
 		} else {
-			//The Robot isn't walking. Stop the animation and set a standing sprite.
+			//The Robot isn't walking or shooting. Stop the animation and set a standing sprite.
 			animator.enabled = false;
 			backColliderSide.enabled = true;
 			backColliderUp.enabled = false;
